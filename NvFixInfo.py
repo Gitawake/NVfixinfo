@@ -11,7 +11,6 @@ import time
 class Config:
     inf_name = r'/Display.Driver/nvcvi.inf'
     a_file_path = ''
-    caution = "请在下方选择需要修改的驱动exe文件，选择后程序自动开始修改。"
     Original_value = r'PCI\VEN_10DE&DEV_1C60&SUBSYS_6A031558'
     Replacement_value = r'PCI\VEN_10DE&DEV_1C60&SUBSYS_74811558'
     winrar = r'"c:/Program Files/WinRAR/WinRAR.exe"'
@@ -23,7 +22,7 @@ window = tk.Tk()  # 实例化Gui库
 
 window.title('N卡驱动inf配置修改器')  # 定义ui窗口标题
 
-window.geometry('{}x{}'.format(Config.w, Config.h))  # 定义ui窗口大小
+window.geometry(f'{Config.w}x{Config.h}')  # 定义ui窗口大小
 
 
 # def callbackClose():
@@ -36,12 +35,12 @@ window.geometry('{}x{}'.format(Config.w, Config.h))  # 定义ui窗口大小
 
 
 def file_path():
-    Config.a_file_path = filedialog.askopenfilename()  # 弹窗选择文件
-    tk.Label(output, text='已选择文件：{}'.format(Config.a_file_path), wraplength=Config.w).grid(column=1, sticky='W')
-    # 定义一个线程用于抽奖中的效果
-    discoloration = threading.Thread(target=modification)
-    # 运行线程
-    discoloration.start()
+    Config.a_file_path = filedialog.askopenfilename()
+    if Config.a_file_path != '':
+        # 定义一个线程用于抽奖中的效果
+        discoloration = threading.Thread(target=modification)
+        # 运行线程
+        discoloration.start()
 
 
 def installing_the_drive():
@@ -53,18 +52,25 @@ def installing_the_drive():
         if os.system('bcdedit.exe /set nointegritychecks off') == 0:
             tk.Label(output, text='操作成功完成。', wraplength=Config.w).grid(column=1, sticky='W')
         else:
-            tk.Label(output, text='开启驱动强制签名失败', wraplength=Config.w).grid(column=1,
-                                                                          sticky='W')
+            tk.Label(output, text='开启驱动强制签名失败', wraplength=Config.w).grid(column=1, sticky='W')
     else:
         tk.Label(output, text='禁用驱动强制签名失败，请开启禁用驱动签名模式后手动执行解压出来的驱动进行安装！', wraplength=Config.w).grid(column=1, sticky='W')
 
 
+menubar = tk.Menu(window)
+
+filemenu = tk.Menu(menubar, tearoff=0)
+menubar.add_cascade(label='File', menu=filemenu)
+
+filemenu.add_command(label='Open', command=file_path)
+filemenu.add_separator()
+filemenu.add_command(label='Exit', command=window.quit)
+
+window.config(menu=menubar)
+
 file_selection = tk.Frame(window)  # 创建一个frame用于放置按钮
 
 file_selection.pack()  # 定义frame排列方式
-
-tk.Label(file_selection, text=Config.caution).grid(row=1, column=1)
-tk.Button(file_selection, text="点击开始选择", command=file_path).grid(row=2, column=1)
 
 output = tk.LabelFrame(window, text="log", labelanchor="n")  # 创建一个frame用于放置按钮
 
@@ -72,9 +78,8 @@ output.pack()  # 定义frame排列方式
 
 
 def modification():
-    tk.Label(output, text='开始校验文件是不是exe文件', wraplength=Config.w).grid(column=1, sticky='W')
     if Config.a_file_path.endswith('.exe'):  # 判断文件格式
-        tk.Label(output, text='文件校验：选择的文件是exe文件', wraplength=Config.w).grid(column=1, sticky='W')
+        tk.Label(output, text='开始解压文件...', wraplength=Config.w).grid(column=1, sticky='W')
         b_file_path = Config.a_file_path.replace('/', '\\')  # cmd命令需要反斜杠，所以把文件目录斜杠替换掉
 
         c_file_path = Config.a_file_path.rfind('.')  # 从右到左定位对应字符所在位置
@@ -121,7 +126,7 @@ def modification():
         else:
             tk.Label(output, text='没有找到inf文件！请确认选择的文件夹是否正确', wraplength=Config.w).grid(column=1, sticky='W')
     else:
-        tk.Label(output, text='选择的文件不是exe文件！', wraplength=Config.w).grid(column=1, sticky='W')
+        messagebox.showwarning(title='错误', message='文件格式不正确，请重新选择。')
 
 
 window.mainloop()
